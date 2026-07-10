@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEURAL MAP 27.R</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <div class="monitor-frame" role="main" aria-label="Neural Map Interface">
+    <div class="scan-beam"></div>
+    <div class="glitch-overlay"></div>
+
+    <!-- BARRA SUPERIOR -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <div class="status-dot" aria-hidden="true"></div>
+        <div>
+          <div class="title-main">NEURAL MAP 27.R</div>
+          <div class="title-sub">REAL-TIME CORTICAL SCANNING</div>
+        </div>
+      </div>
+      <div class="top-bar-right">
+        <div class="freq-display">
+          <span class="freq-value">{{ freq }}</span>
+          <span class="freq-unit">HZ</span>
+        </div>
+          <div class="datetime">
+            <div>{{ dateDisplay }}</div>
+            <div>{{ timeDisplay }}</div>
+          </div>
+      </div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL -->
+    <div class="main-area">
+
+      <!-- PANEL IZQUIERDO -->
+      <aside class="panel-left" aria-label="Neural Metrics">
+        <div class="panel-section-title">NEURAL ACTIVITY</div>
+
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">ALPHA</span>
+            <span class="metric-value cyan">{{ alpha }}</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill cyan" :style="{ width: alphaBar + '%' }"></div></div>
+        </div>
+
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">BETA</span>
+            <span class="metric-value yellow">{{ beta }}</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill yellow" :style="{ width: betaBar + '%' }"></div></div>
+        </div>
+
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">THETA</span>
+            <span class="metric-value blue">{{ theta }}</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill blue" :style="{ width: thetaBar + '%' }"></div></div>
+        </div>
+
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">DELTA</span>
+            <span class="metric-value red">{{ delta }}</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill red" :style="{ width: deltaBar + '%' }"></div></div>
+        </div>
+
+        <div class="panel-section-title" style="margin-top:8px">SYNAPSE DENSITY</div>
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">FRONTAL</span>
+            <span class="metric-value cyan">{{ frontal }}%</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill cyan" :style="{ width: frontal + '%' }"></div></div>
+        </div>
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">TEMPORAL</span>
+            <span class="metric-value red">{{ temporal }}%</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill red" :style="{ width: temporal + '%' }"></div></div>
+        </div>
+        <div>
+          <div class="metric-row">
+            <span class="metric-label">OCCIPITAL</span>
+            <span class="metric-value blue">{{ occipital }}%</span>
+          </div>
+          <div class="mini-bar"><div class="mini-bar-fill blue" :style="{ width: occipital + '%' }"></div></div>
+        </div>
+
+        <div class="panel-section-title" style="margin-top:8px">SIGNAL INTEGRITY</div>
+        <div class="metric-row">
+          <span class="metric-label">SNR</span>
+          <span class="metric-value cyan">42.6 dB</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">NOISE FLOOR</span>
+          <span class="metric-value yellow">-68 dBm</span>
+        </div>
+      </aside>
+
+      <!-- ÁREA CENTRAL — CEREBRO 3D -->
+      <section class="center-area" aria-label="Brain Scan Visualization">
+        <canvas id="brainCanvas"></canvas>
+
+        <div class="crosshair" aria-hidden="true">
+          <div class="crosshair-ring"></div>
+        </div>
+
+        <div class="brain-label speech" aria-label="Speech Center">SPEECH CENTER</div>
+        <div class="brain-label higher" aria-label="Higher Brain">HIGHER BRAIN</div>
+        <div class="brain-label middle" aria-label="Middle Brain">MIDDLE BRAIN</div>
+        <div class="brain-label lower" aria-label="Lower Brain">LOWER BRAIN</div>
+        <div class="brain-label cerebellum" aria-label="Cerebellum">CEREBELLUM</div>
+      </section>
+
+      <!-- PANEL DERECHO -->
+      <aside class="panel-right" aria-label="Region Activity">
+        <div class="panel-section-title">WAVEFORM MONITOR</div>
+        <div class="wave-container">
+          <canvas id="waveCanvas"></canvas>
+        </div>
+        <div class="wave-container">
+          <canvas id="waveCanvas2"></canvas>
+        </div>
+
+        <div class="panel-section-title" style="margin-top:4px">ACTIVE REGIONS</div>
+
+        <div class="region-item">
+          <div class="region-color" style="background:var(--red);box-shadow:0 0 6px var(--red-glow)"></div>
+          <span class="region-name">BROCA'S AREA</span>
+          <span class="region-activity" style="color:var(--red)">{{ broca }}%</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color" style="background:var(--yellow);box-shadow:0 0 6px var(--yellow-glow)"></div>
+          <span class="region-name">PREFRONTAL</span>
+          <span class="region-activity" style="color:var(--yellow)">{{ prefrontal }}%</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color" style="background:var(--blue);box-shadow:0 0 6px var(--blue-glow)"></div>
+          <span class="region-name">LIMBIC SYS</span>
+          <span class="region-activity" style="color:var(--blue)">{{ limbic }}%</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color" style="background:var(--accent);box-shadow:0 0 6px var(--accent-glow)"></div>
+          <span class="region-name">BRAINSTEM</span>
+          <span class="region-activity" style="color:var(--accent)">{{ brainstem }}%</span>
+        </div>
+        <div class="region-item">
+          <div class="region-color" style="background:var(--fg-dim)"></div>
+          <span class="region-name">CEREBELLUM</span>
+          <span class="region-activity" style="color:var(--fg-dim)">{{ cerebellum }}%</span>
+        </div>
+
+        <div class="panel-section-title" style="margin-top:8px">SELECTED PART</div>
+        <div class="selected-region-card" :style="{ borderColor: selectedRegionColor, boxShadow: '0 0 14px ' + selectedRegionColor }">
+          <div class="selected-region-name" :style="{ color: selectedRegionColor }">{{ selectedRegionName }}</div>
+          <div class="selected-region-short">{{ selectedRegionShort }}</div>
+          <div class="selected-region-desc">{{ selectedRegionDesc }}</div>
+          <div class="selected-region-stats">{{ selectedRegionStats }}</div>
+        </div>
+
+        <div class="panel-section-title" style="margin-top:8px">SCAN COORDINATES</div>
+        <div class="coords">
+          X: <span>{{ coordX }}</span><br>
+          Y: <span>{{ coordY }}</span><br>
+          Z: <span>{{ coordZ }}</span>
+        </div>
+
+        <div class="panel-section-title" style="margin-top:8px">TEMPERATURE</div>
+        <div class="metric-row">
+          <span class="metric-label">CORE</span>
+          <span class="metric-value red">{{ tempCore }}</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">SURFACE</span>
+          <span class="metric-value cyan">{{ tempSurface }}</span>
+        </div>
+      </aside>
+    </div>
+
+    <!-- BARRA INFERIOR -->
+    <footer class="bottom-bar">
+      <div class="bottom-bar-left">
+        <div class="bottom-indicator">
+          <div class="dot green"></div>
+          <span>SCANNING</span>
+        </div>
+        <div class="bottom-indicator">
+          <div class="dot yellow"></div>
+          <span>SYNC OK</span>
+        </div>
+        <div class="bottom-indicator">
+          <div class="dot green"></div>
+          <span>DATA LINK</span>
+        </div>
+      </div>
+      <div>RESOLUTION: 2048x2048 &nbsp;|&nbsp; DEPTH: 12-BIT &nbsp;|&nbsp; FRAME: <span>{{ frameCount }}</span></div>
+    </footer>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
