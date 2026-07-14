@@ -1,18 +1,17 @@
 // =============================================
 // NEURAL MAP 27.R - Vue 3 + Three.js
 // =============================================
-const { createApp, ref, reactive, onMounted, onUnmounted } = Vue;
-
-createApp({
-  setup() {
-    const rand = (min, max) => Math.random() * (max - min) + min;
-    const lerp = (a, b, t) => a + (b - a) * t;
-    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-    const freq = ref(45);
-    const alpha = ref(12.4);
-    const beta = ref(28.7);
-    const theta = ref(6.1);
+const { createApp, ref, reactive, onMounted, onUnmounted } = Vue; // Vue 3.x
+createApp({// App principal
+  setup() {// Configuración de la aplicación
+    const rand = (min, max) => Math.random() * (max - min) + min;// Generar números aleatorios
+    const lerp = (a, b, t) => a + (b - a) * t;// Interpolar entre dos valores
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));// Restringir valores entre dos límites
+    // Estado reactivo de la aplicación
+    const freq = ref(45);// Frecuencia
+    const alpha = ref(12.4);// Alpha
+    const beta = ref(28.7);// Beta
+    const theta = ref(6.1);// Theta
     const delta = ref(3.2);
     const frontal = ref(84);
     const temporal = ref(67);
@@ -22,46 +21,51 @@ createApp({
     const limbic = ref(62);
     const brainstem = ref(45);
     const cerebellum = ref(38);
-    const coordX = ref('+0.00');
-    const coordY = ref('-0.00');
-    const coordZ = ref('+0.00');
-    const tempCore = ref('37.2C');
-    const tempSurface = ref('35.8C');
-    const frameCount = ref(0);
-    const timeDisplay = ref('00:00:00');
-    const dateDisplay = ref('2087.06.14');
+    const coordX = ref('+0.00');// Coordenadas X
+    const coordY = ref('-0.00');// Coordenadas Y
+    const coordZ = ref('+0.00');// Coordenadas Z
+    const tempCore = ref('37.2C');// Temperatura Core
+    const tempSurface = ref('35.8C');// Temperatura Superficial
+    const frameCount = ref(0);// Contador de frames
+    const timeDisplay = ref('00:00:00');// Display de tiempo
+    const dateDisplay = ref('2087.06.14');// Display de fecha
 
-    const alphaBar = ref(62);
-    const betaBar = ref(78);
-    const thetaBar = ref(35);
-    const deltaBar = ref(20);
-    const frontalBar = ref(84);
-    const temporalBar = ref(67);
-    const occipitalBar = ref(91);
-    const selectedRegionName = ref('Selecciona una zona del cerebro 3D');
-    const selectedRegionShort = ref('Haz clic sobre la malla para inspeccionar la región.');
-    const selectedRegionDesc = ref('La selección mostrará información anatómica y funcional de la parte del cerebro marcada por el punto de impacto.');
-    const selectedRegionStats = ref('');
-    const selectedRegionColor = ref('var(--accent)');
-    const selectedRegionKey = ref('default');
+    const alphaBar = ref(62);// Barra Alpha
+    const betaBar = ref(78);// Barra Beta
+    const thetaBar = ref(35);// Barra Theta
+    const deltaBar = ref(20);// Barra Delta
+    const frontalBar = ref(84);// Barra Frontal
+    const temporalBar = ref(67);// Barra Temporal
+    const occipitalBar = ref(91);// Barra Occipital
+    const brocaBar = ref(87);// Barra Broca
+    const prefrontalBar = ref(74);// Barra Prefrontal
+    const limbicBar = ref(62);// Barra Limbic
+    const brainstemBar = ref(45);// Barra Tallo
+    const cerebellumBar = ref(38);// Barra Cerebelo
+    const selectedRegionName = ref('Selecciona una zona del cerebro 3D');// Nombre de la selección
+    const selectedRegionShort = ref('Haz clic sobre la malla para inspeccionar la región.');// Descripción corta de la selección
+    const selectedRegionDesc = ref('La selección mostrará información anatómica y funcional de la parte del cerebro marcada por el punto de impacto.');// Descripción completa de la selección
+    const selectedRegionStats = ref('');// Estadísticas de la selección
+    const selectedRegionColor = ref('var(--accent)');// Color de la selección
+    const selectedRegionKey = ref('default');// Clave de la selección
 
     // Three.js refs
-    let brainScene, brainCamera, brainRenderer, brainMesh, brainGroup;
-    let raycaster;
-    let pointer;
-    let nodeMeshes = [];
-    let connectionLines = [];
-    let pulseMeshes = [];
-    let animationId;
-    let particles = [];
-    let time = 0;
-    let lastPulse = 0;
-    let resizeObserver;
+    let brainScene, brainCamera, brainRenderer, brainMesh, brainGroup;// Scene, camera, renderer, mesh, group
+    let raycaster;// Raycaster
+    let pointer;// Puntero
+    let nodeMeshes = [];// Nodos
+    let connectionLines = [];// Conexiones
+    let pulseMeshes = [];// Pulsos
+    let animationId;// ID de animación
+    let particles = [];// Partículas
+    let time = 0;// Tiempo
+    let lastPulse = 0;// Último pulso
+    let resizeObserver;// Resize observer
 
     // Wave canvases refs
-    let wave1Canvas, wave1Ctx, wave2Canvas, wave2Ctx;
-    let wave1W, wave1H, wave2W, wave2H;
-
+    let wave1Canvas, wave1Ctx, wave2Canvas, wave2Ctx;// Canvases de las ondas
+  let wave1W, wave1H, wave2W, wave2H;// Anchos y altos de las ondas
+// Estado reactivo de la aplicación
     const brainRegions = {
       frontal: {
         name: 'Lóbulo frontal',
@@ -113,51 +117,51 @@ createApp({
         color: 'var(--accent)'
       }
     };
-
-    function updateClock() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      timeDisplay.value = `${h}:${m}:${s}`;
-      const y = now.getFullYear();
-      const mo = String(now.getMonth() + 1).padStart(2, '0');
-      const d = String(now.getDate()).padStart(2, '0');
-      dateDisplay.value = `${y}.${mo}.${d}`;
+// actualizar reloj y fecha
+    function updateClock() {// Actualizar reloj y fecha
+      const now = new Date();// Ahora
+      const h = String(now.getHours()).padStart(2, '0');// Horas
+      const m = String(now.getMinutes()).padStart(2, '0');// Minutos
+      const s = String(now.getSeconds()).padStart(2, '0');// Segundos
+      timeDisplay.value = `${h}:${m}:${s}`;// Mostrar tiempo
+      const y = now.getFullYear();// Año
+      const mo = String(now.getMonth() + 1).padStart(2, '0');// Mes
+      const d = String(now.getDate()).padStart(2, '0');// Día 
+      dateDisplay.value = `${y}.${mo}.${d}`;// Mostrar fecha
     }
 
-    function updateMetrics() {
-      frameCount.value++;
+    function updateMetrics() {// Actualizar métricas
+      frameCount.value++;// Incrementar contador de frames
 
       const now = Date.now();
-      freq.value = Math.round(45 + Math.sin(now * 0.001) * 3);
+      freq.value = Math.round(45 + Math.sin(now * 0.001) * 3);// Frecuencia
 
-      alpha.value = (12 + Math.sin(now * 0.0007) * 2).toFixed(1);
-      beta.value = (28 + Math.cos(now * 0.0005) * 4).toFixed(1);
-      theta.value = (6 + Math.sin(now * 0.0009) * 1.5).toFixed(1);
-      delta.value = (3 + Math.cos(now * 0.0006) * 1).toFixed(1);
-
+      alpha.value = (12 + Math.sin(now * 0.0007) * 2).toFixed(1);// con el valor de alpha
+      beta.value = (28 + Math.cos(now * 0.0005) * 4).toFixed(1); // con el valor de beta
+      theta.value = (6 + Math.sin(now * 0.0009) * 1.5).toFixed(1); // con el valor de theta
+      delta.value = (3 + Math.cos(now * 0.0006) * 1).toFixed(1);   // con el valor de delta
+// Actualizar barras de métricas
       alphaBar.value = clamp(alpha.value / 20 * 100, 5, 100);
       betaBar.value = clamp(beta.value / 40 * 100, 5, 100);
       thetaBar.value = clamp(theta.value / 10 * 100, 5, 100);
       deltaBar.value = clamp(delta.value / 6 * 100, 5, 100);
-
-      frontal.value = Math.round(84 + Math.sin(now * 0.0004) * 6);
-      temporal.value = Math.round(67 + Math.cos(now * 0.0006) * 8);
-      occipital.value = Math.round(91 + Math.sin(now * 0.0003) * 4);
+// Actualizar valores de las zonas
+      frontal.value = Math.round(84 + Math.sin(now * 0.0004) * 6);// con  el valor  de frontal
+      temporal.value = Math.round(67 + Math.cos(now * 0.0006) * 8);// con el valor de temporal
+      occipital.value = Math.round(91 + Math.sin(now * 0.0003) * 4);// con el valor de occipital
       frontalBar.value = frontal.value;
       temporalBar.value = temporal.value;
       occipitalBar.value = occipital.value;
 
-      broca.value = Math.round(87 + Math.sin(now * 0.0008) * 8);
-      prefrontal.value = Math.round(74 + Math.cos(now * 0.0005) * 10);
-      limbic.value = Math.round(62 + Math.sin(now * 0.0007) * 7);
-      brainstem.value = Math.round(45 + Math.cos(now * 0.0009) * 5);
-      cerebellum.value = Math.round(38 + Math.sin(now * 0.0004) * 4);
+      broca.value = Math.round(87 + Math.sin(now * 0.0008) * 8);// con el valor de broca
+      prefrontal.value = Math.round(74 + Math.cos(now * 0.0005) * 10);// con el valor de prefrontal
+      limbic.value = Math.round(62 + Math.sin(now * 0.0007) * 7);// con el valor de limbic
+      brainstem.value = Math.round(45 + Math.cos(now * 0.0009) * 5);// con el valor de brainstem
+      cerebellum.value = Math.round(38 + Math.sin(now * 0.0004) * 4);// con el valor de cerebellum
 
-      const cx = (Math.sin(now * 0.0003) * 12).toFixed(2);
-      const cy = (Math.cos(now * 0.0004) * 8).toFixed(2);
-      const cz = (Math.sin(now * 0.0002) * 5).toFixed(2);
+      const cx = (Math.sin(now * 0.0003) * 12).toFixed(2);// con el valor de cx
+      const cy = (Math.cos(now * 0.0004) * 8).toFixed(2);// con el valor de cy
+      const cz = (Math.sin(now * 0.0002) * 5).toFixed(2);// con el valor de cz
       coordX.value = (cx >= 0 ? '+' : '') + cx;
       coordY.value = (cy >= 0 ? '+' : '') + cy;
       coordZ.value = (cz >= 0 ? '+' : '') + cz;
@@ -166,7 +170,7 @@ createApp({
       tempSurface.value = (35.8 + Math.cos(now * 0.00015) * 0.2).toFixed(1) + 'C';
     }
 
-    function setupWaveCanvas(id) {
+    function setupWaveCanvas(id) {// Crear canvas de ondas
       const canvas = document.getElementById(id);
       if (!canvas) return null;
       const ctx = canvas.getContext('2d');
@@ -182,7 +186,7 @@ createApp({
       return { canvas, ctx, resize, w: dims.w, h: dims.h };
     }
 
-    function getBrainRegionInfo(localPoint) {
+    function getBrainRegionInfo(localPoint) {// Obtener información de la región del cerebro
       const x = localPoint.x;
       const y = localPoint.y;
       const z = localPoint.z;
